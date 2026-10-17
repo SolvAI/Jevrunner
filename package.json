@@ -1,0 +1,25 @@
+{
+  "name": "jevrunner",
+  "private": true,
+  "type": "module",
+  "description": "An endless runner driven live by a local Jev-style decision model (H2O Lightning 4B), with every decision, its odds and its latency on screen",
+  "scripts": {
+    "dev": "vite",
+    "test": "node --test tests/*.test.js",
+    "sim": "node scripts/sim.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.2"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SolvAI/Jevrunner"
+  }
+}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jevrunner · a decision model at the wheel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="stage">
+      <canvas id="c"></canvas>
+      <div class="hud tl">
+        <div class="label">THE RUN</div>
+        <div id="score" class="score">0</div>
+        <div class="best">🏆 <span id="best">0</span> PERSONAL BEST</div>
+      </div>
+      <div class="hud tc">
+        <div id="zone" class="label">PRISM FRONTIER</div>
+        <div id="dist" class="dist">0<small> m</small></div>
+        <div class="zonetrack"><i id="zonebar"></i></div>
+        <div id="nextzone" class="tiny">BEYOND THE HORIZON</div>
+      </div>
+      <div class="hud tr">
+        <div class="coins"><span class="bolt">⚡</span><span id="coins">0</span></div>
+        <button id="sound" class="pause" title="Sound (M)">🔊</button>
+        <button id="pause" class="pause" title="Pause (P)">II</button>
+      </div>
+      <div class="hud bl">
+        <div class="flowhead"><span>⚡ FLOW</span><b id="flow">1×</b></div>
+        <div class="flowtrack"><i id="flowbar"></i></div>
+        <div class="tiny">FOLLOW THE GOLD · <span id="speed">15.0 m/s</span></div>
+      </div>
+      <div class="hud bc">
+        <div id="pw-shield" class="pw">🛡 SHIELD <b>–</b></div>
+        <div id="pw-magnet" class="pw">🧲 MAGNET <b>–</b></div>
+        <div id="pw-double" class="pw">⚡ 2× <b>–</b></div>
+      </div>
+      <div id="popups"></div>
+      <div id="zonebanner" class="zonebanner"></div>
+      <div id="fps" class="fps" hidden></div>
+      <div id="crash" class="crash" hidden></div>
+      <div id="title" class="title">
+        <div class="logo">JEVRUNNER</div>
+        <div class="sub">a local decision model at the wheel</div>
+        <div class="hint">▶ <b>Let <span class="ml">H2O</span> run</b> in the panel · or switch <span class="ml">H2O</span> off and drive with <b>A D</b> lanes, <b>W</b> jump, <b>S</b> slide</div>
+        <div class="hint small"><b>M</b> sound · <b>P</b> pause · <b>F</b> frame rate</div>
+      </div>
+    </section>
+
+    <aside id="panel">
+      <div class="card head">
+        <div class="badge">⚡</div>
+        <div class="who">
+          <div class="name ml" id="model-short">H2O</div>
+          <div class="driving"><i id="driver-dot" class="dot"></i><span id="driver">IS WATCHING</span></div>
+          <div class="sys">SYSTEM ONE · <span id="model-id">h2o-lightning-4b</span></div>
+        </div>
+        <div id="lat" class="lat">– ms</div>
+      </div>
+
+      <div class="card next">
+        <div class="cardhead"><span><b>NEXT ROW</b> <span id="row-title">row – · –</span></span><button id="sees-btn" class="ghost">WHAT <span class="ml">H2O</span> SEES</button></div>
+        <div class="lanes">
+          <div class="lane" id="lane-left"><div class="ln">LEFT</div><div class="what">–</div><div class="bar"><i class="fill"></i></div><div class="pct">–</div><div class="safe">passable –</div><div class="mv">JUMP <i>–</i></div><div class="mv">RUN <i>–</i></div><div class="mv">SLIDE <i>–</i></div></div>
+          <div class="lane" id="lane-mid"><div class="ln">MID</div><div class="what">–</div><div class="bar"><i class="fill"></i></div><div class="pct">–</div><div class="safe">passable –</div><div class="mv">JUMP <i>–</i></div><div class="mv">RUN <i>–</i></div><div class="mv">SLIDE <i>–</i></div></div>
+          <div class="lane" id="lane-right"><div class="ln">RIGHT</div><div class="what">–</div><div class="bar"><i class="fill"></i></div><div class="pct">–</div><div class="safe">passable –</div><div class="mv">JUMP <i>–</i></div><div class="mv">RUN <i>–</i></div><div class="mv">SLIDE <i>–</i></div></div>
+        </div>
+        <div class="choice"><span id="choice-key" class="key">·</span><span id="choice" class="ctext">WAITING</span><span id="choice-sub" class="csub">– lane · – move<br>– ms</span></div>
+      </div>
+
+      <div class="card feedcard">
+        <div class="cardhead"><b>LIVE FEED</b><span class="tiny">newest first</span></div>
+        <div id="feed" class="feed"></div>
+      </div>
+
+      <div class="card keypad">
+        <div class="keys">
+          <div></div><div id="key-W" class="k">W<small>JUMP</small></div><div></div>
+          <div id="key-A" class="k">A<small>LEFT</small></div><div id="key-S" class="k">S<small>SLIDE</small></div><div id="key-D" class="k">D<small>RIGHT</small></div>
+        </div>
+        <div id="key-caption" class="kcap">—</div>
+      </div>
+
+      <div class="card controls">
+        <div class="btns">
+          <button id="btn-run" class="go">▶ LET H2O RUN</button>
+          <button id="btn-drive" class="tog on">H2O DRIVING · ON</button>
+          <button id="btn-net" class="tog">SAFETY NET · OFF</button>
+          <button id="btn-eyes" class="tog">EYES · STATE</button>
+          <button id="btn-plan" class="tog">PLAN AHEAD · OFF</button>
+          <button id="btn-ghost" class="tog">GHOST · OFF</button>
+        </div>
+        <div class="speedrow"><span>SPEED</span><input id="speed-cap" type="range" min="15" max="200" step="1" value="34" aria-label="Speed in metres per second" /><b id="speed-val">34 m/s</b></div>
+        <div id="speed-note" class="note">–</div>
+        <div id="stats" class="stats">0 decisions · avg 0 ms · 0 runs · 0 crashes</div>
+        <div id="health" class="health">checking the model…</div>
+      </div>
+    </aside>
+
+    <div id="sees" class="sees"><div class="seesbox"><div class="cardhead"><b>WHAT <span class="ml">H2O</span> SEES</b><button id="sees-close" class="ghost">CLOSE</button></div><div class="body"></div></div></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
