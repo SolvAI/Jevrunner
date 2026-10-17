@@ -3,3 +3,4 @@ runs/
 config.env
 dist/
 .DS_Store
+__pycache__/

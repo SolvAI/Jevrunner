@@ -58,7 +58,9 @@ export function decidePlugin({
           if (!local) return send(res, 200, { up: true, remote: true, url, label }); // hosted APIs have no /health
           try {
             const r = await fetch(`${base}/health`, { signal: AbortSignal.timeout(1500) });
-            return send(res, 200, { up: r.ok, url, label });
+            // H2O's shims say what serves them ("vllm http://...", "llama.cpp http://..."); the page uses it for defaults
+            const backend = String((await r.json().catch(() => ({}))).backend ?? '').split(' ')[0];
+            return send(res, 200, { up: r.ok, url, label, backend });
           } catch {
             return send(res, 200, { up: false, url, label });
           }

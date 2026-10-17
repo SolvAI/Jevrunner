@@ -36,6 +36,7 @@ const flag = (name, key) => params.has(name) || store.get(key, false);
 const opts = {
   playing: false, paused: false, driving: true,
   net: flag('net', 'jevrunner.net'), vision: flag('vision', 'jevrunner.vision'), plan: flag('plan', 'jevrunner.plan'), ghost: flag('ghost', 'jevrunner.ghost'),
+  planChosen: params.has('plan') || store.get('jevrunner.plan', null) !== null, // plan-ahead set by hand (or the URL)
   muted: store.get('jevrunner.muted', false),
 };
 let run = null;
@@ -163,6 +164,7 @@ toggle('btn-drive', 'driving', null, (v) => (driver.enabled = v));
 toggle('btn-net', 'net', 'jevrunner.net', (v) => (driver.safetyNet = v));
 toggle('btn-eyes', 'vision', 'jevrunner.vision', (v) => (driver.vision = v));
 toggle('btn-plan', 'plan', 'jevrunner.plan', (v) => {
+  opts.planChosen = true;
   driver.planAhead = v;
   ui.speed(cap, v);
 });
@@ -221,6 +223,16 @@ async function health() {
     const h = await (await fetch('/api/health')).json();
     if (h.label && h.label !== $('model-short').textContent) {
       ui.setLabel(h.label);
+      refresh();
+    }
+    // llama.cpp (or MLX) answers in ~0.25 s instead of vLLM's ~0.1 s: deciding a row ahead keeps the default speed
+    // safe, unless you chose
+    if (h.backend && h.backend !== 'vllm' && !opts.plan && !opts.planChosen) {
+      opts.plan = true;
+      opts.planChosen = true;
+      driver.planAhead = true;
+      ui.speed(cap, true);
+      ui.popup(`PLAN AHEAD ON · ${h.backend}`, 'power');
       refresh();
     }
     $('health').textContent = h.remote ? `remote model · ${h.url}` : h.up ? `model up · ${h.url}` : `model DOWN at ${h.url} · start it with scripts/run.sh`;

@@ -22,9 +22,16 @@ if [ -n "${DECIDE_URL:-}" ]; then
 elif h2o_up; then
   say "H2O is already running on :$H2O_PORT"
 else
-  say "Starting H2O Lightning 4B (the first start compiles kernels: a few minutes; later starts ~1 minute)"
-  say "Its log: $LOGS/h2o.log"
-  "$ROOT/scripts/serve_h2o.sh" > "$LOGS/h2o.log" 2>&1 &
+  backend="$(choose_backend)"
+  if [ "$backend" = llamacpp ]; then
+    say "Starting H2O Lightning 4B on llama.cpp (about a minute)"
+    say "Its log: $LOGS/h2o.log"
+    "$PY" "$ROOT/scripts/llamacpp.py" serve > "$LOGS/h2o.log" 2>&1 &
+  else
+    say "Starting H2O Lightning 4B on vLLM (the first start compiles kernels: a few minutes; later starts ~1 minute)"
+    say "Its log: $LOGS/h2o.log"
+    "$ROOT/scripts/serve_h2o.sh" > "$LOGS/h2o.log" 2>&1 &
+  fi
   H2O_PID=$!
   started=$(date +%s)
   until grep -q "ready on" "$LOGS/h2o.log" 2> /dev/null; do

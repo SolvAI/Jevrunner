@@ -7,6 +7,7 @@ source "$(dirname "$0")/config.sh"
 [ -x "$VLLM_VENV/bin/vllm" ] || die "no vLLM at $VLLM_VENV: run scripts/setup.sh"
 [ -f "$H2O_DIR/serve.sh" ] || die "no H2O Lightning 4B at $H2O_DIR: run scripts/setup.sh (or set H2O_DIR in config.env)"
 
+# Downloads made before 2026-10-17 ship the label rows as label_rows.safetensors (newer ones: label_rows.lightning).
 # vLLM loads every *.safetensors of a model folder that has no weights index, so it would also read
 # label_rows.safetensors (the shim's readout rows, tensor "W") and stop on "no module or parameter named 'W'". vLLM
 # gets a folder of links to the model's files without it; the shim still reads the label rows from the model folder.

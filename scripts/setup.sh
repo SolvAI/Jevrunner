@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# One-time setup: the game's Node packages, a Python env with vLLM 0.30.0, and H2O Lightning 4B's weights (~9 GB).
-# Each step is skipped when it is already done, so it is safe to run again. Settings: scripts/config.sh.
+# One-time setup on Linux and macOS (Windows: scripts\setup.ps1): the game's Node packages, then H2O Lightning 4B on
+#   vllm      Linux + NVIDIA GPU of 15 GB+ (the default there): a Python env with vLLM 0.30.0 and the model (~9 GB)
+#   llamacpp  everything else: a prebuilt llama.cpp for this machine and a GGUF (Q8_0 4.5 GB, or QUANT=Q4_K_M 2.7 GB)
+# BACKEND=vllm|llamacpp picks one. Each step is skipped when it is already done, so it is safe to run again.
 set -euo pipefail
 source "$(dirname "$0")/config.sh"
 cd "$ROOT"
@@ -9,13 +11,26 @@ say "Checking the machine"
 command -v node > /dev/null || die "Node.js 22+ is needed (https://nodejs.org)"
 node_major="$(node -p 'process.versions.node.split(".")[0]')"
 [ "$node_major" -ge 22 ] || die "Node.js 22+ is needed, found $(node -v)"
-command -v nvidia-smi > /dev/null || die "an NVIDIA GPU with its driver is needed (nvidia-smi not found)"
-nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader | sed 's/^/    GPU: /'
-command -v python3 > /dev/null || die "Python 3.10+ is needed"
-python3 -c 'import sys; sys.exit(sys.version_info < (3, 10))' || die "Python 3.10+ is needed, found $(python3 -V)"
+[ -n "$PY" ] || die "Python 3.10+ is needed"
+"$PY" -c 'import sys; sys.exit(sys.version_info < (3, 10))' || die "Python 3.10+ is needed, found $("$PY" -V)"
+if command -v nvidia-smi > /dev/null; then
+  nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader | sed 's/^/    GPU: /'
+fi
+backend="$(choose_backend)"
+case "$backend" in vllm|llamacpp) ;; *) die "BACKEND must be vllm or llamacpp" ;; esac
+echo "$backend" > "$JEVRUNNER_HOME/backend"
+echo "    backend: $backend$([ "$backend" = llamacpp ] && echo " (${QUANT:-Q8_0})")"
 
 say "1/3 Node packages"
 npm install --no-audit --no-fund
+
+if [ "$backend" = llamacpp ]; then
+  say "2/3 + 3/3 llama.cpp and the GGUF"
+  "$PY" "$ROOT/scripts/llamacpp.py" setup
+  say "Ready. Start everything with: scripts/run.sh"
+  exit 0
+fi
+command -v nvidia-smi > /dev/null || die "vLLM needs an NVIDIA GPU (nvidia-smi not found); use BACKEND=llamacpp"
 
 say "2/3 vLLM 0.30.0 in $VLLM_VENV"
 if [ -x "$VLLM_VENV/bin/vllm" ]; then
