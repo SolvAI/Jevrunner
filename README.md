@@ -12,6 +12,7 @@ Jev-style model, reads the track and picks a lane and a move for every row of ob
 each decision as it happens: the odds per lane and per move, the keys it "presses", and how long it took.
 
 ![Jevrunner: H2O Lightning 4B driving, 25 km in, with its decisions on the right](docs/preview.webp)
+*realtime gameplay controlled by H2O 4B at 100ms latency*
 
 This repo is a hands-on way to learn three things:
 
